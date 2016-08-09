@@ -113,6 +113,13 @@ def logout():
 def get_upload():
     try:
         if FakeDB("users").get(request.values["userid"])["token"] == request.values["token"]:
+            current_time = int(time.time())
+            expire_time = FakeDB("users").get(request.values["userid"])["expire"]
+
+            if current_time > expire_time:
+                print "expired"
+
+
             f =  request.files["file"]
             fext = os.path.splitext(f.filename)
             nfn = id_generator()
