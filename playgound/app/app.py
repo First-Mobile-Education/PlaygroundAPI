@@ -10,10 +10,8 @@ app.config["APP_ROOT"] = os.path.dirname(os.path.abspath(__file__))
 app.config["URL_ROOT"] = "http://localhost:5000"
 app.config["PROJECT"] = "playground"
 app.config["VERSION"] = "1.0"
-app.config["TOKEN_EXPIRE"] = 300
-
+app.config["TOKEN_EXPIRE"] = 86400 # 24 hours
 app.config["API_ROOT"] = "/" + app.config["PROJECT"]+"/api/v"+app.config["VERSION"]+"/"
-
 
 
 class FakeDB:
@@ -36,6 +34,23 @@ class FakeDB:
             self.db[self.root].append({key:value})
             self.save()
             return True
+        except:
+            return False
+
+    def find_value(self,search):
+        # db
+        #  |->root
+        #        |->index
+        #               |->key = value
+
+        # return index of found value
+        try:
+            for sk,sv in search.items():
+                for users in self.db[self.root]:
+                    for attr in users.values():
+                        for k,v in attr.items():
+                            if k == sk and v == sv:
+                                return users.keys()
         except:
             return False
 
@@ -69,7 +84,9 @@ class FakeDB:
 def id_generator(size=6, chars=string.ascii_lowercase + string.digits + string.ascii_uppercase):
     return ''.join(random.choice(chars) for _ in range(size))
 
+
 # GET functions
+
 @app.route(app.config["API_ROOT"] + "view/<img_name>", methods=['GET'])
 def show_uploaded(img_name):
     return send_from_directory(
@@ -92,7 +109,8 @@ def login_user():
         details = {"token": id_generator(32),
                     "expire": int(time.time()) + app.config["TOKEN_EXPIRE"]
                        }
-        db.update(uname,details)
+
+        print db.update(uname,details)
     else:
         details = {"login":"failed"}
 
@@ -101,33 +119,37 @@ def login_user():
 
 @app.route(app.config["API_ROOT"] + "logout", methods=['POST'])
 def logout():
+
+    token = "fKab3xommLoFFQfKy46bK3lPPorWWdTR"
+
+    return jsonify(FakeDB("users").find_value(token))
+
+
+
+
+
+    """
     try:
         if FakeDB("users").get(request.values["userid"])["token"] == request.values["token"]:
             FakeDB("users").update(request.values["userid"],{"expire":int(time.time())})
             return json.dumps({"message":"logout"}, separators=(',', ':'))
     except:
         return json.dumps({"error":"logout error"}, separators=(',', ':'))
-
+    """
 
 @app.route(app.config["API_ROOT"] + "upload", methods=['POST'])
 def get_upload():
     try:
         if FakeDB("users").get(request.values["userid"])["token"] == request.values["token"]:
-            current_time = int(time.time())
-            expire_time = FakeDB("users").get(request.values["userid"])["expire"]
-
-            if current_time > expire_time:
-                print "expired"
-
-
             f =  request.files["file"]
             fext = os.path.splitext(f.filename)
             nfn = id_generator()
             new_file = os.path.join(app.config["APP_ROOT"], app.config['UPLOAD_FOLDER']) + nfn + fext[1]
             f.save(new_file)
-            details = {'url': app.config["URL_ROOT"] + app.config["API_ROOT"] + "view/" + nfn + fext[1],
-                       'size': os.stat(new_file).st_size,
-                       'dtg': int(time.time())
+            details = {"url": app.config["URL_ROOT"] + app.config["API_ROOT"] + "view/" + nfn + fext[1],
+                       "size": os.stat(new_file).st_size,
+                       "dtg": int(time.time()),
+                       "user": request.values["userid"]
                        }
             FakeDB("upload").post(nfn,details)
         else:
@@ -159,4 +181,5 @@ def create_user():
 
 
 if __name__ == "__main__":
+
     app.run(debug=True)
