@@ -111,17 +111,13 @@ app.config["VERSION"] = "1.0"
 
 app.config["TOKEN_EXPIRE"] = (60 * 60 * 24)
 
-
-
-
 app.config["API_ROOT"] = "/" + app.config["PROJECT"] + "/api/v" + app.config["VERSION"] + "/"
-
-
-
 
 app.config["URL_ROOT"] = app.config["HTTP_TYPE"] + "://" + \
                          app.config["IP"] + ":" + \
                          app.config["HTTP_PORT"]
+
+
 
 
 
@@ -137,6 +133,8 @@ def user(token):
 @app.route(app.config["API_ROOT"] + "echo/<string>", methods=['GET'])
 def echoecho(string):
     return string
+
+
 
 
 
@@ -174,7 +172,6 @@ def create_user():
     return json.dumps(op_details, separators=(',', ':'))
 
 
-
 @app.route(app.config["API_ROOT"] + "login", methods=['POST'])
 def login():
     db = FakeDB("users")
@@ -202,6 +199,7 @@ def logout():
         details = {"message":"error"}
 
     return json.dumps(details, separators=(',',':'))
+
 
 
 
@@ -241,7 +239,6 @@ def view_school(school_id):
             school_data = {"error":"invalid school id"}
     finally:
         return json.dumps(school_data, separators=(',', ':'))
-
 
 
 
