@@ -65,7 +65,6 @@ class FakeDB:
     def __str__(self):
         return self.root
 
-
 class FakeCred:
 
     def require_valid_token(self):
@@ -144,6 +143,36 @@ def echoecho(string):
 
 
 
+@app.route(app.config["API_ROOT"] + "user/<user_id>", methods=['GET'])
+def _user(user_id):
+    pass
+
+@app.route(app.config["API_ROOT"] + "user/create", methods=['POST'])
+def create_user():
+    jdtg = int(time.time())
+    db = FakeDB("users")
+    uid = fk.id_generator_from_string(request.values["uname"])
+
+    if db.get(uid):
+        op_details = {"error":"user already exists"}
+    else:
+        details = {
+            "uname": request.values["uname"],
+            "pword": hashlib.sha1(request.values["pword"]).hexdigest(),
+            "token": fk.id_generator(32),
+            "expire": jdtg + app.config["TOKEN_EXPIRE"],
+            "jdtg": jdtg
+        }
+
+        op_details = {
+            "uname" : details["uname"],
+            "token" : details["token"],
+            "expire" : details["expire"]
+        }
+        db.post(uid,details)
+
+    return json.dumps(op_details, separators=(',', ':'))
+
 
 
 @app.route(app.config["API_ROOT"] + "login", methods=['POST'])
@@ -173,33 +202,6 @@ def logout():
         details = {"message":"error"}
 
     return json.dumps(details, separators=(',',':'))
-
-
-@app.route(app.config["API_ROOT"] + "create/user", methods=['POST'])
-def create_user():
-    jdtg = int(time.time())
-    db = FakeDB("users")
-    uid = fk.id_generator_from_string(request.values["uname"])
-
-    if db.get(uid):
-        op_details = {"error":"user already exists"}
-    else:
-        details = {
-            "uname": request.values["uname"],
-            "pword": hashlib.sha1(request.values["pword"]).hexdigest(),
-            "token": fk.id_generator(32),
-            "expire": jdtg + app.config["TOKEN_EXPIRE"],
-            "jdtg": jdtg
-        }
-
-        op_details = {
-            "uname" : details["uname"],
-            "token" : details["token"],
-            "expire" : details["expire"]
-        }
-        db.post(uid,details)
-
-    return json.dumps(op_details, separators=(',', ':'))
 
 
 
