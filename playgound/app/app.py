@@ -231,8 +231,8 @@ def create_school():
         return json.dumps(details, separators=(',', ':'))
 
 
-@app.route(app.config["API_ROOT"] + "school/<school_id>", methods=['GET'])
-def view_school(school_id):
+@app.route(app.config["API_ROOT"] + "school/<school_id>/<token>", methods=['GET'])
+def view_school(school_id,token):
     try:
         school_data = FakeDB("schools").get(school_id)
         if not school_data:
@@ -271,6 +271,7 @@ def upload():
 
 
 @app.route(app.config["API_ROOT"] + "view/<img_name>", methods=['GET'])
+
 def show_uploaded(img_name):
     return send_from_directory(
             os.path.join(
@@ -288,6 +289,4 @@ def show_uploaded(img_name):
 
 if __name__ == "__main__":
 
-    app.run(debug=True,
-            host="0.0.0.0"
-            )
+    app.run(debug=Trues)
