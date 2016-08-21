@@ -6,6 +6,9 @@ from functools import wraps
 import json, os, random, string, time, hashlib
 
 
+# api keys
+
+
 class FakeDB:
     # FakeDB (C)2016
     def __init__(self,db_name):
@@ -48,6 +51,9 @@ class FakeDB:
     def update(self,key,entry):
         try:
             for i in self.db[self.root]:
+
+                print "\n{}\n".format(i)
+
                 if i.keys()[0] == key:
                     for a in entry.keys():
                         i[key][a] = entry[a]
@@ -68,9 +74,12 @@ class FakeDB:
 class FakeCred:
 
     def require_valid_token(self):
+
         def decorator(f):
+
             @wraps(f)
             def wrapped(*args, **kwargs):
+
                 try:
                     id = FakeDB("users").find_value({"token": request.values["token"]})[0]
                     if FakeDB("users").get(id)["expire"] > int(time.time()):
@@ -78,20 +87,29 @@ class FakeCred:
                         return func
                     else:
                         return json.dumps({"error":"expired token"}, separators=(',', ':'))
+
                 except:
                     return json.dumps({"error": "token error"}, separators=(',', ':'))
+
             return wrapped
+
         return decorator
 
     def id_generator(self,size=6, chars=string.ascii_lowercase + string.digits + string.ascii_uppercase):
         return ''.join(random.choice(chars) for _ in range(size))
 
+    def id_generator_api_key(self,id):
+        for i in hashlib.sha1(id).hexdigest():
+            print i
 
     def id_generator_from_string(self,encode_string,size=6,leading="0"):
         for i in hashlib.md5(encode_string).hexdigest():
             if i in string.digits:
                 leading += i
         return leading[0:size]
+
+
+
 
 
 fk = FakeCred()
@@ -109,7 +127,7 @@ app.config["APP_ROOT"] = os.path.dirname(os.path.abspath(__file__))
 app.config["PROJECT"] = "playground"
 app.config["VERSION"] = "1.0"
 
-app.config["TOKEN_EXPIRE"] = (60 * 60 * 24)
+app.config["TOKEN_EXPIRE"] = (60 * 60 * 24) # 24 HOURS
 
 app.config["API_ROOT"] = "/" + app.config["PROJECT"] + "/api/v" + app.config["VERSION"] + "/"
 
@@ -178,7 +196,9 @@ def login():
     uname = fk.id_generator_from_string(request.values['uname'])
     # uname = hashlib.md5(request.values["uname"]).hexdigest()
     pword = hashlib.sha1(request.values["pword"]).hexdigest()
+
     if db.get(uname) and db.get(uname)["pword"] == pword:
+
         details = {"token": fk.id_generator(32),
                    "expire": int(time.time()) + app.config["TOKEN_EXPIRE"]
                   }
@@ -218,6 +238,7 @@ def create_school():
     details = {school_id : {
         "created_on" : int(time.time()),
         "created_by" : FakeDB("users").find_value({"token":request.values["token"]})[0],
+        "secret_key" : fk.id_generator_api_key(school_id),
         "owner" : FakeDB("users").find_value({"token":request.values["token"]})[0],
         "school_name" : request.values["school_name"]
     }}
@@ -229,6 +250,13 @@ def create_school():
     else:
         db.post(school_id,details)
         return json.dumps(details, separators=(',', ':'))
+
+
+@app.route(app.config["API_ROOT"] + "school/user/create", methods=['POST'])
+@fk.require_valid_token()
+def create_school_user():
+    user_id = fk.id_generator_from_string(request.values["uname"])
+    details = {}
 
 
 @app.route(app.config["API_ROOT"] + "school/<school_id>/<token>", methods=['GET'])
@@ -289,4 +317,4 @@ def show_uploaded(img_name):
 
 if __name__ == "__main__":
 
-    app.run(debug=Trues)
+    app.run(debug=True)
