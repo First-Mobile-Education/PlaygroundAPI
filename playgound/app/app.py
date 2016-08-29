@@ -168,6 +168,7 @@ def _user(user_id):
 def create_user():
     jdtg = int(time.time())
     db = FakeDB("users")
+
     uid = fk.id_generator_from_string(request.values["uname"])
 
     if db.get(uid):
@@ -189,6 +190,25 @@ def create_user():
         db.post(uid,details)
 
     return json.dumps(op_details, separators=(',', ':'))
+
+
+@app.route(app.config["API_ROOT"] + "user/update", methods=['POST'])
+@fk.require_valid_token()
+def update_user():
+    no_go = ["token"]
+    bla = {}
+    db = FakeDB("users")
+    id = db.find_value({"token":request.values["token"]})[0]
+    for i in request.values:
+        if not i in no_go:
+            bla[i] = request.values[i]
+
+
+    details = {id:bla}
+    db.update(id, bla)
+
+
+    return json.dumps(details, separators=(',', ':'))
 
 
 @app.route(app.config["API_ROOT"] + "login", methods=['POST'])
@@ -235,15 +255,18 @@ def create_school():
     else:
         c_time = int(time.time())
         c_user = FakeDB("users").find_value({"token":request.values["token"]})[0]
+
         details = {school_id : {
             "created_on" : c_time,
             "updated_on" : c_time,
             "created_by" : c_user,
             "secret_key" : fk.id_generator_api_key(school_id, c_time),
-            "owner" : c_user,
+
+            "owners" : [c_user,"000000"],
             "school_name" : request.values["school_name"]
         }}
         db.post(school_id,details)
+
         return json.dumps(details, separators=(',', ':'))
 
 

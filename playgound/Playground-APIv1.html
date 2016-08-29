@@ -103,6 +103,36 @@
                 		</div>
                 	</div>
 
+                	<div class="panel panel-default">
+                		<div class="panel-heading">
+                			<h4>Update User</h4>		
+                		</div>
+                		<div class="panel-body">
+	            			<div>
+								<span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+								<b>Requires valid token</b>
+	            			</div>
+	            			<div>
+	            				<p>user/update will accept up to 32 different aurguments and add them to the user object</p>
+	            			</div>
+		                	<div>
+		                		<div><samp>http://localhost:5000/playground/api/v1.0/user/update</samp></div>
+		                		<div><kbd>POST</kbd><code>{"data" : {"token" : &lt;Token&gt;, "item[n]" : &lt;Item[n]&gt;, ... }}</code></div>
+		                	</div>
+		                	<hr>
+		                	<div>
+		                        <form class="form-inline"
+		                              action="http://localhost:5000/playground/api/v1.0/user/update"
+		                              method="POST"
+		                              enctype="multipart/form-data">
+		                            <input type="text" class="form-control input-sm" name="token" placeholder="token">
+		                            <input type="text" class="form-control input-sm" name="first-name" placeholder="first-name">
+		                            <input type="text" class="form-control input-sm" name="last-name" placeholder="last-name">
+		                            <input type="submit" class="btn btn-default btn-sm" value="Update User">
+		                        </form>
+	                        </div>
+                		</div>
+                	</div>
 
 
 
