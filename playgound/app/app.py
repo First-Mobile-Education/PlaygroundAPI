@@ -11,6 +11,7 @@ import json, os, random, string, time, hashlib
 
 class FakeDB:
     # FakeDB (C)2016
+
     def __init__(self,db_name):
         self.root = db_name
         db_path = os.path.dirname(os.path.abspath(__file__)) + "\\db\\" + self.root + ".json"
@@ -23,6 +24,9 @@ class FakeDB:
         else:
             self.db_file = open(db_path, "w+")
             self.db = json.loads("{\"" + self.root + "\":[]}")
+
+    def __str__(self):
+        return self.root
 
     def post(self,key,value):
         try:
@@ -49,16 +53,11 @@ class FakeDB:
                 return i[key]
 
     def update(self,key,entry):
+
         try:
-            for i in self.db[self.root]:
-
-                print "\n{}\n".format(i)
-
-                if i.keys()[0] == key:
-                    for a in entry.keys():
-                        i[key][a] = entry[a]
-                else:
-                    return False
+            for i in range(len(self.db[self.root])):
+                if self.db[self.root][i].keys()[0] == key:
+                    for a in entry: self.db[self.root][i][key][a] = entry[a]
             self.save()
             return True
         except:
@@ -68,18 +67,13 @@ class FakeDB:
         self.db_file.seek(0)
         self.db_file.write(json.dumps(self.db, separators=(',', ':')))
 
-    def __str__(self):
-        return self.root
-
 class FakeCred:
+    # FakeCred (C)2016
 
     def require_valid_token(self):
-
         def decorator(f):
-
             @wraps(f)
             def wrapped(*args, **kwargs):
-
                 try:
                     id = FakeDB("users").find_value({"token": request.values["token"]})[0]
                     if FakeDB("users").get(id)["expire"] > int(time.time()):
@@ -87,22 +81,36 @@ class FakeCred:
                         return func
                     else:
                         return json.dumps({"error":"expired token"}, separators=(',', ':'))
-
                 except:
                     return json.dumps({"error": "token error"}, separators=(',', ':'))
-
             return wrapped
-
         return decorator
 
-    def id_generator(self,size=6, chars=string.ascii_lowercase + string.digits + string.ascii_uppercase):
+    def require_school_key(self):
+        def decorator(f):
+            @wraps(f)
+            def wrapped(*args, **kwargs):
+                # print request.values["school_key"]
+                id = request.values["school_id"]
+                key = request.values["school_key"]
+                if FakeDB("schools").get(id)[id]["secret_key"] == key:
+                    func = f(*args, **kwargs)
+                    return func
+                else:
+                    return json.dumps({"error": "api error"}, separators=(',', ':'))
+            return wrapped
+        return decorator
+
+
+
+    def id_generator(self, size=6, chars=string.ascii_lowercase + string.digits + string.ascii_uppercase):
         return ''.join(random.choice(chars) for _ in range(size))
 
-    def id_generator_api_key(self,id):
-        for i in hashlib.sha1(id).hexdigest():
-            print i
+    def id_generator_api_key(self,id,mixer):
 
-    def id_generator_from_string(self,encode_string,size=6,leading="0"):
+      return hashlib.sha1(id+str(mixer)).hexdigest()
+
+    def id_generator_from_string(self, encode_string, size=6, leading="0"):
         for i in hashlib.md5(encode_string).hexdigest():
             if i in string.digits:
                 leading += i
@@ -138,7 +146,6 @@ app.config["URL_ROOT"] = app.config["HTTP_TYPE"] + "://" + \
 
 
 
-
 @app.route(app.config["API_ROOT"] + "@<token>", methods=['GET'])
 def user(token):
     try:
@@ -151,12 +158,6 @@ def user(token):
 @app.route(app.config["API_ROOT"] + "echo/<string>", methods=['GET'])
 def echoecho(string):
     return string
-
-
-
-
-
-
 
 
 @app.route(app.config["API_ROOT"] + "user/<user_id>", methods=['GET'])
@@ -194,11 +195,8 @@ def create_user():
 def login():
     db = FakeDB("users")
     uname = fk.id_generator_from_string(request.values['uname'])
-    # uname = hashlib.md5(request.values["uname"]).hexdigest()
     pword = hashlib.sha1(request.values["pword"]).hexdigest()
-
     if db.get(uname) and db.get(uname)["pword"] == pword:
-
         details = {"token": fk.id_generator(32),
                    "expire": int(time.time()) + app.config["TOKEN_EXPIRE"]
                   }
@@ -221,11 +219,6 @@ def logout():
     return json.dumps(details, separators=(',',':'))
 
 
-
-
-
-
-
 @app.route(app.config["API_ROOT"] + "school", methods=['GET'])
 def _school():
     return json.dumps({"error":"invalid school id"}, separators=(',', ':'))
@@ -235,21 +228,46 @@ def _school():
 @fk.require_valid_token()
 def create_school():
     school_id = fk.id_generator_from_string(request.values["school_name"])
-    details = {school_id : {
-        "created_on" : int(time.time()),
-        "created_by" : FakeDB("users").find_value({"token":request.values["token"]})[0],
-        "secret_key" : fk.id_generator_api_key(school_id),
-        "owner" : FakeDB("users").find_value({"token":request.values["token"]})[0],
-        "school_name" : request.values["school_name"]
-    }}
-
     db = FakeDB("schools")
-
     if db.get(school_id):
         return json.dumps({"error":"school already exists"}, separators=(',', ':'))
+
     else:
+        c_time = int(time.time())
+        c_user = FakeDB("users").find_value({"token":request.values["token"]})[0]
+        details = {school_id : {
+            "created_on" : c_time,
+            "updated_on" : c_time,
+            "created_by" : c_user,
+            "secret_key" : fk.id_generator_api_key(school_id, c_time),
+            "owner" : c_user,
+            "school_name" : request.values["school_name"]
+        }}
         db.post(school_id,details)
         return json.dumps(details, separators=(',', ':'))
+
+
+@app.route(app.config["API_ROOT"] + "school/update", methods=['POST'])
+@fk.require_school_key()
+@fk.require_valid_token()
+def update_school():
+
+    no_go = ["school_key","school_id","token"]
+    bla = {}
+    db = FakeDB("schools")
+    school_id = request.values["school_id"]
+
+    for i in request.values:
+        if not i in no_go:
+            bla[i] = request.values[i]
+
+    bla["updated_on"] = int(time.time())
+    bla["updated_by"] = FakeDB("users").find_value({"token":request.values["token"]})[0]
+
+    details = {school_id : bla}
+    db.update(school_id,bla)
+
+    return json.dumps(details, separators=(',', ':'))
 
 
 @app.route(app.config["API_ROOT"] + "school/user/create", methods=['POST'])
@@ -257,6 +275,7 @@ def create_school():
 def create_school_user():
     user_id = fk.id_generator_from_string(request.values["uname"])
     details = {}
+
 
 
 @app.route(app.config["API_ROOT"] + "school/<school_id>/<token>", methods=['GET'])
@@ -267,11 +286,6 @@ def view_school(school_id,token):
             school_data = {"error":"invalid school id"}
     finally:
         return json.dumps(school_data, separators=(',', ':'))
-
-
-
-
-
 
 
 @app.route(app.config["API_ROOT"] + "upload", methods=['POST'])
@@ -299,7 +313,6 @@ def upload():
 
 
 @app.route(app.config["API_ROOT"] + "view/<img_name>", methods=['GET'])
-
 def show_uploaded(img_name):
     return send_from_directory(
             os.path.join(
@@ -308,11 +321,6 @@ def show_uploaded(img_name):
                 ),
             img_name
             )
-
-
-
-
-
 
 
 if __name__ == "__main__":

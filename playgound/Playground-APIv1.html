@@ -34,19 +34,20 @@
                 		<div class="panel-body">
 		                	<div>
 		                		<div><samp>http://localhost:5000/playground/api/v1.0/login</samp></div>
-		                		<div>
-		                			<form class="form-inline" action="http://localhost:5000/playground/api/v1.0/login" method="POST" enctype="multipart/form-data">
-		                			<kbd>POST</kbd>		                			
-		                			<code>
-		                				{"data": {
-		                						"uname" : <input type="text" name="uname" class="pseudo-code" placeholder="<Username>">, 
-
-		                						"pword" : <input type="password" name="pword" class="pseudo-code" placeholder="<Password>">
-		                				}}
-		                			</code>
-		                				<button type="submit" class="btn btn-default btn-xs">Submit</button>
-	                				</form>
-		                		</div>
+		                		
+		                		<div><kbd>POST</kbd><code>{"data" : {"uname" : &lt;Username&gt;,"pword" : &lt;Password&gt;}}</code></div>
+		                		
+		                		<hr>
+		                        <div>
+			                        <form class="form-inline"
+			                              action="http://localhost:5000/playground/api/v1.0/login"
+			                              method="POST"
+			                              enctype="multipart/form-data">
+			                            <input type="text" class="form-control input-sm" name="uname" placeholder="username">
+			                            <input type="password" class="form-control input-sm" name="pword" placeholder="password">
+			                            <input type="submit" class="btn btn-default btn-sm" value="loginnn">
+			                        </form>
+		                        </div>
 		                	</div>
 	            		</div>
                 	</div>
@@ -165,6 +166,42 @@
                 	</div>
 
 
+                	<div class="panel panel-default">
+                		<div class="panel-heading">
+                			<h4>Update School</h4>		
+                		</div>
+                		<div class="panel-body">
+                			<div>
+								<span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+								<b>Requires valid token</b>
+                			</div>
+                			<div>
+		                		<div><samp>http://localhost:5000/playground/api/v1.0/school/update</samp></div>
+		                		<div><kbd>POST</kbd><code>{"data" : {"token" : &lt;Token&gt;, "school_name" : &lt;School name&gt;}}</code></div>
+
+		                	</div>
+		                	<hr>
+		                	<div>
+		                        <form class="form-inline"
+		                              action="http://localhost:5000/playground/api/v1.0/school/update"
+		                              method="POST"
+		                              enctype="multipart/form-data">
+		                            <input type="text" class="form-control input-sm" name="token" placeholder="token">
+		                            <input type="text" class="form-control input-sm" name="school_id" placeholder="school_id">
+		                            <input type="text" class="form-control input-sm" name="school_key" placeholder="school_key">
+		                            <input type="text" class="form-control input-sm" name="description" placeholder="description">
+		                            <input type="text" class="form-control input-sm" name="other_info" placeholder="other_info">
+
+
+
+
+
+
+		                            <input type="submit" class="btn btn-default btn-sm" value="Update School">
+		                        </form>
+	                        </div>
+                		</div>
+                	</div>
 
 
 
@@ -217,7 +254,9 @@
                     <div class="panel panel-default">
                     
                     	<div class="panel-body">
-                  			<samp>The soil is dirty</samp>
+                  			<div id="results">
+                  			<code>wadda wadda bing bang</code>
+                  			</div>
                     	</div>
 
                     </div>
@@ -226,7 +265,10 @@
                 </div>
             </div>
         </div><!-- /.container -->
+        <script type="text/javascript">
+        	
 
+        </script>
         <script src="static/include/js/bootstrap.min.js"></script>
 
     </body>
