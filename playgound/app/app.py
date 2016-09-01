@@ -6,9 +6,6 @@ from functools import wraps
 import json, os, random, string, time, hashlib
 
 
-# api keys
-
-
 class FakeDB:
     # FakeDB (C)2016
 
@@ -117,9 +114,6 @@ class FakeCred:
         return leading[0:size]
 
 
-
-
-
 fk = FakeCred()
 app = Flask(__name__)
 
@@ -197,16 +191,13 @@ def create_user():
 def update_user():
     no_go = ["token"]
     bla = {}
-    db = FakeDB("users")
-    id = db.find_value({"token":request.values["token"]})[0]
+    id = FakeDB("users").find_value({"token":request.values["token"]})[0]
     for i in request.values:
         if not i in no_go:
             bla[i] = request.values[i]
 
-
     details = {id:bla}
-    db.update(id, bla)
-
+    FakeDB("users").update(id, bla)
 
     return json.dumps(details, separators=(',', ':'))
 
@@ -261,8 +252,7 @@ def create_school():
             "updated_on" : c_time,
             "created_by" : c_user,
             "secret_key" : fk.id_generator_api_key(school_id, c_time),
-
-            "owners" : [c_user,"000000"],
+            "owner" : [c_user],
             "school_name" : request.values["school_name"]
         }}
         db.post(school_id,details)
@@ -291,14 +281,6 @@ def update_school():
     db.update(school_id,bla)
 
     return json.dumps(details, separators=(',', ':'))
-
-
-@app.route(app.config["API_ROOT"] + "school/user/create", methods=['POST'])
-@fk.require_valid_token()
-def create_school_user():
-    user_id = fk.id_generator_from_string(request.values["uname"])
-    details = {}
-
 
 
 @app.route(app.config["API_ROOT"] + "school/<school_id>/<token>", methods=['GET'])
