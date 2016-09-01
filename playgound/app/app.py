@@ -98,8 +98,6 @@ class FakeCred:
             return wrapped
         return decorator
 
-
-
     def id_generator(self, size=6, chars=string.ascii_lowercase + string.digits + string.ascii_uppercase):
         return ''.join(random.choice(chars) for _ in range(size))
 
@@ -113,6 +111,15 @@ class FakeCred:
                 leading += i
         return leading[0:size]
 
+    def id_generator_enroll(self,count,clen=10):
+        list = []
+        for i in range(count):
+            a = fk.id_generator(clen)
+            if a in list:
+                a = fk.id_generator(clen)
+            else:
+                list[len(list):] = [a]
+        return list
 
 fk = FakeCred()
 app = Flask(__name__)
@@ -248,16 +255,23 @@ def create_school():
         c_user = FakeDB("users").find_value({"token":request.values["token"]})[0]
 
         details = {school_id : {
-            "created_on" : c_time,
-            "updated_on" : c_time,
+            "created" : c_time,
+            "updated" : c_time,
             "created_by" : c_user,
             "secret_key" : fk.id_generator_api_key(school_id, c_time),
-            "owner" : [c_user],
-            "school_name" : request.values["school_name"]
+            "school_name" : request.values["school_name"],
+            "enroll" : 2500
+
         }}
-        db.post(school_id,details)
+        # db.post(school_id,details)
+
+        print fk.id_generator_enroll(100)
 
         return json.dumps(details, separators=(',', ':'))
+
+
+
+
 
 
 @app.route(app.config["API_ROOT"] + "school/update", methods=['POST'])
