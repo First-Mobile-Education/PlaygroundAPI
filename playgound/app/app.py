@@ -33,16 +33,23 @@ class FakeDB:
         except:
             return False
 
+    def find_id(self,search):
+        for a in search:
+            sk,sv = a,search[a]
+        for items in self.db[self.root]:
+            for attr in items.values():
+                for x,y in attr.items():
+                    for g,h in y.items():
+                        if g == sk and h == sv:
+                            return x
     def find_value(self,search):
-        try:
-            for sk,sv in search.items():
-                for users in self.db[self.root]:
-                    for attr in users.values():
-                        for k,v in attr.items():
-                            if k == sk and v == sv:
-                                return users.keys()
-        except:
-            return False
+
+        for sk,sv in search.items():
+            for users in self.db[self.root]:
+                for attr in users.values():
+                    for k,v in attr.items():
+                        if k == sk and v == sv:
+                            return users.keys()
 
     def get(self,key):
         for i in self.db[self.root]:
@@ -98,10 +105,13 @@ class FakeCred:
             return wrapped
         return decorator
 
+    def jsonop(self, message_string):
+        return json.dumps(message_string, separators=(',', ':'))
+
     def id_generator(self, size=6, chars=string.ascii_lowercase + string.digits + string.ascii_uppercase):
         return ''.join(random.choice(chars) for _ in range(size))
 
-    def id_generator_api_key(self,id,mixer):
+    def id_generator_api_key(self, id, mixer):
 
       return hashlib.sha1(id+str(mixer)).hexdigest()
 
@@ -111,7 +121,7 @@ class FakeCred:
                 leading += i
         return leading[0:size]
 
-    def id_generator_enroll(self,count,clen=10):
+    def id_generator_enroll(self, count, clen=10):
         list = []
         for i in range(count):
             a = fk.id_generator(clen)
@@ -120,6 +130,14 @@ class FakeCred:
             else:
                 list[len(list):] = [a]
         return list
+
+    def id_generator_cleanname(self, message_string):
+        op = ""
+        for i in message_string:
+            if i in string.ascii_letters + string.digits:
+                op += i
+
+        return op
 
 fk = FakeCred()
 app = Flask(__name__)
@@ -144,16 +162,21 @@ app.config["URL_ROOT"] = app.config["HTTP_TYPE"] + "://" + \
                          app.config["IP"] + ":" + \
                          app.config["HTTP_PORT"]
 
+app.config["ABR_ROOT"] = "/@"
 
 
 
-@app.route(app.config["API_ROOT"] + "@<token>", methods=['GET'])
-def user(token):
-    try:
-        if FakeDB("users").find_value({"token":token})[0]:
-            return json.dumps({"data": "true"}, separators=(',', ':'))
-    except:
-        return json.dumps({"data": "false"}, separators=(',', ':'))
+@app.route(app.config["ABR_ROOT"] + "<school>", methods=['GET'])
+def school_url(school):
+    id = FakeDB("schools").find_id({"url_name":school})
+    a = FakeDB("schools").get(id)
+    return jsonify(a)
+
+
+
+
+
+
 
 
 @app.route(app.config["API_ROOT"] + "echo/<string>", methods=['GET'])
@@ -175,12 +198,18 @@ def create_user():
     if db.get(uid):
         op_details = {"error":"user already exists"}
     else:
+
+        if request.values["enroll"]:
+            pass
+
+
         details = {
             "uname": request.values["uname"],
             "pword": hashlib.sha1(request.values["pword"]).hexdigest(),
             "token": fk.id_generator(32),
             "expire": jdtg + app.config["TOKEN_EXPIRE"],
             "jdtg": jdtg
+
         }
 
         op_details = {
@@ -190,7 +219,7 @@ def create_user():
         }
         db.post(uid,details)
 
-    return json.dumps(op_details, separators=(',', ':'))
+    return fk.jsonop(op_details)
 
 
 @app.route(app.config["API_ROOT"] + "user/update", methods=['POST'])
@@ -247,27 +276,48 @@ def _school():
 def create_school():
     school_id = fk.id_generator_from_string(request.values["school_name"])
     db = FakeDB("schools")
+
     if db.get(school_id):
         return json.dumps({"error":"school already exists"}, separators=(',', ':'))
 
     else:
         c_time = int(time.time())
         c_user = FakeDB("users").find_value({"token":request.values["token"]})[0]
+        e_len = 100
+        s_key = fk.id_generator_api_key(school_id, c_time),
+        s_url = fk.id_generator_cleanname(request.values["school_name"])
 
         details = {school_id : {
             "created" : c_time,
             "updated" : c_time,
             "created_by" : c_user,
-            "secret_key" : fk.id_generator_api_key(school_id, c_time),
+            "secret_key" : s_key,
             "school_name" : request.values["school_name"],
-            "enroll" : 2500
-
+            "url_name" : s_url
         }}
+
+        op = {school_id : {
+            "secret_key" : s_key,
+            "school_name" : request.values["school_name"],
+            "url" : app.config["URL_ROOT"] + "/@"+ s_url
+        }}
+
+
         # db.post(school_id,details)
+        # FakeDB("enrolls").post(school_id,fk.id_generator_enroll(e_len))
 
-        print fk.id_generator_enroll(100)
+        assets_dir = app.config["APP_ROOT"]+"\\assets\\"+school_id
+        if not os.path.exists(assets_dir):
+            os.makedirs(assets_dir)
 
-        return json.dumps(details, separators=(',', ':'))
+
+        #os.makedirs()
+
+
+
+        # make dir as app/assets/<id>
+
+        return json.dumps(op, separators=(',', ':'))
 
 
 
