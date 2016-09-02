@@ -42,6 +42,7 @@ class FakeDB:
                     for g,h in y.items():
                         if g == sk and h == sv:
                             return x
+
     def find_value(self,search):
 
         for sk,sv in search.items():
@@ -113,7 +114,7 @@ class FakeCred:
 
     def id_generator_api_key(self, id, mixer):
 
-      return hashlib.sha1(id+str(mixer)).hexdigest()
+        return hashlib.sha1(id+str(mixer)).hexdigest()
 
     def id_generator_from_string(self, encode_string, size=6, leading="0"):
         for i in hashlib.md5(encode_string).hexdigest():
@@ -283,9 +284,10 @@ def create_school():
     else:
         c_time = int(time.time())
         c_user = FakeDB("users").find_value({"token":request.values["token"]})[0]
-        e_len = 100
-        s_key = fk.id_generator_api_key(school_id, c_time),
+        e_len = 1
+        s_key = fk.id_generator_api_key(school_id, c_time)
         s_url = fk.id_generator_cleanname(request.values["school_name"])
+        assets_dir = app.config["APP_ROOT"]+"\\assets\\"+school_id
 
         details = {school_id : {
             "created" : c_time,
@@ -302,26 +304,14 @@ def create_school():
             "url" : app.config["URL_ROOT"] + "/@"+ s_url
         }}
 
-
-        # db.post(school_id,details)
-        # FakeDB("enrolls").post(school_id,fk.id_generator_enroll(e_len))
-
-        assets_dir = app.config["APP_ROOT"]+"\\assets\\"+school_id
         if not os.path.exists(assets_dir):
             os.makedirs(assets_dir)
 
+        db.post(school_id,details)
 
-        #os.makedirs()
-
-
-
-        # make dir as app/assets/<id>
+        FakeDB("enrolls").post(school_id,fk.id_generator_enroll(e_len))
 
         return json.dumps(op, separators=(',', ':'))
-
-
-
-
 
 
 @app.route(app.config["API_ROOT"] + "school/update", methods=['POST'])
