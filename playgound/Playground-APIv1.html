@@ -138,7 +138,7 @@
 
                 	<div class="panel panel-default">
                 		<div class="panel-heading">
-                			<h4>File Upload</h4>		
+                			<h4>Asset Upload</h4>		
                 		</div>                		
                 		<div class="panel-body">
 	            			<div>
@@ -148,7 +148,7 @@
 
 		                	<div>
 		                		<div><samp>http://localhost:5000/playground/api/v1.0/create/upload</samp></div>
-		                		<div><kbd>POST</kbd><code>{"data" : {"token" : &lt;Token&gt;, "file" : &lt;Data File&gt;}}</code></div>
+		                		<div><kbd>POST</kbd><code>{"data" : {"token" : &lt;Token&gt;, "school_id" : &lt;School ID&gt;, "school_key" : &lt;School Key&gt;, "file" : &lt;Data File&gt;}}</code></div>
 		                	</div>
 		                	<hr>
 		                	<div>
@@ -158,6 +158,8 @@
 		                              enctype="multipart/form-data">
 
 		                            <input type="text" class="form-control input-sm" name="token" placeholder="token">
+		                            <input type="text" class="form-control input-sm" name="school_id" placeholder="school_id">
+		                            <input type="text" class="form-control input-sm" name="school_key" placeholder="school_key">
 		                            <input type="file" class="form-control input-sm" name="file">
 		                            <input type="submit" class="btn btn-default btn-sm" value="Upload">
 		                        </form>
@@ -231,6 +233,41 @@
                 		</div>
                 	</div>
 
+
+                	<div class="panel panel-default">
+                		<div class="panel-heading">
+                			<h4>Generate School Enroll Code</h4>		
+                		</div>
+                		<div class="panel-body">
+                			<div>
+								<span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+								<b>Requires valid token</b>
+                			</div>
+	            			<div>
+	            				<p>school/update will accept up to 32 different aurguments and add them to the school object</p>
+	            			</div>
+
+                			<div>
+		                		<div><samp>http://localhost:5000/playground/api/v1.0/generate/enrollcode</samp></div>
+		                		<div><kbd>POST</kbd><code>{"data" : {"token" : &lt;Token&gt;, "school_id" : &lt;School ID&gt;,"school_key" : &lt;School Key&gt;, "item[n]" : &lt;Item[n]&gt;, ...}}</code></div>
+
+		                	</div>
+		                	<hr>
+		                	<div>
+		                        <form class="form-inline"
+		                              action="http://localhost:5000/playground/api/v1.0/school/update"
+		                              method="POST"
+		                              enctype="multipart/form-data">
+		                            <input type="text" class="form-control input-sm" name="token" placeholder="token">
+		                            <input type="text" class="form-control input-sm" name="school_id" placeholder="school_id">
+		                            <input type="text" class="form-control input-sm" name="school_key" placeholder="school_key">
+		                            <input type="text" class="form-control input-sm" name="description" placeholder="description">
+		                            <input type="text" class="form-control input-sm" name="other_info" placeholder="other_info">
+		                            <input type="submit" class="btn btn-default btn-sm" value="Update School">
+		                        </form>
+	                        </div>
+                		</div>
+                	</div>
 
 
 
