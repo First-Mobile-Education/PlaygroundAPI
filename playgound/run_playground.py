@@ -1,8 +1,6 @@
 #!flask/bin/python
-
 # Start the show
 
-import app
+from app import app
+app.run(debug=True)
 
-
-# app.run(debug=True)
