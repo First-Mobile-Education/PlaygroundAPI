@@ -1,4 +1,3 @@
-#!flask/bin/python
 # BS22NF
 
 from flask import Flask, jsonify, request, send_from_directory
