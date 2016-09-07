@@ -1,4 +1,3 @@
-
 from app import app
 from flask import Flask, jsonify, request, send_from_directory
 import json, os, time, hashlib
