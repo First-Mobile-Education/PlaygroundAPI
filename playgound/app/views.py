@@ -6,8 +6,6 @@ from .fake import FakeDB, FakeCred
 fk = FakeCred()
 
 
-
-
 @app.route(app.config["ABR_ROOT"] + "<school>", methods=['GET'])
 def school_url(school):
     s_id = FakeDB("schools").find_id({"url_name":school})
@@ -18,12 +16,6 @@ def school_url(school):
         op = fs.read()
 
         return op
-
-
-
-
-
-
 
 
 @app.route(app.config["API_ROOT"] + "echo/<string>", methods=['GET'])
